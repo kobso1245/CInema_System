@@ -1,4 +1,8 @@
 from settings import DB_FILE_NAME
+import sqlite3
+
+
+
 CONN = sqlite3.connect(DB_FILE_NAME)
 CONN.row_factory = sqlite3.Row
 
@@ -6,6 +10,8 @@ PROMPT_FOR_NAME= "Please write down your name: "
 PROMPT_FOR_TICKETS_CNT = "Please write down the number of tickets you need: "
 PROMPT_FOR_MOVIE_ID = "Please write down the movie id: "
 PROMPT_FOR_PROJECTION_ID = "Please write down the projection id: "
+PROMPT_FOR_SEATS = "Please write down the row and col: "
+PROMPT_FOR_FINALIZE = "Please write down <finalize> to continue: "
 
 
 ROWS = 10
@@ -21,9 +27,14 @@ WHERE proj_id = {}
 '''
 
 SHOW_ALL_TAKEN_SEATS_QUERY = '''
-SELECT row, col, 
+SELECT row, col 
 FROM Reservations
 WHERE proj_id = {}
+'''
+
+INSERT_INTO_RESERVATIONS = '''
+INSERT INTO Reservations(username, proj_id, row, col)
+VALUES({}, {}, {}, {})
 '''
 
 
@@ -34,17 +45,17 @@ def execute_count_projections_query_and_get_result(proj_id):
     return data['count']
 
 
-def has_spots(ticketsi proj_id):
-    taken_seats = execute_count_projections_query_and_get_result()
-    if tickets + taken_seats > SEATS:
+def has_spots(tickets, proj_id):
+    taken_seats = execute_count_projections_query_and_get_result(proj_id)
+    if int(tickets) + taken_seats > SEATS:
         return False
     else:
         return True
 
 
-def show_ask_and_return_answer_for_projection_seats(movie_id):
-    show_movie_projections(movie_id)
-    proj_id = open(PROMPT_FOR_PROJECTION_ID)
+def show_ask_and_return_answer_for_projection_seats(movie_id, tickets, proj_id):
+    #show_movie_projections(movie_id)
+    #proj_id = input(PROMPT_FOR_PROJECTION_ID)
     has_available_spots = has_spots(tickets, proj_id)
     return has_available_spots
 
@@ -69,18 +80,48 @@ def print_free_seats(proj_id, available_seats):
     for seat in available_seats:
         print(seat)
 
+
+def to_string(name):
+    return '"' + name + '"'
+
+def on_finalize(seats, proj_id, name):
+    cursor = CONN.cursor()
+    print(seats)
+    for seat in seats:
+        cursor.execute(INSERT_INTO_RESERVATIONS.format(to_string(name), proj_id,
+                                                       seat[0], seat[1]))
+
+    CONN.commit()
+
+
 def make_reservation():
     name = input(PROMPT_FOR_NAME)
-    tickets = input(PROMPT_FOR_TICKETS_CNT)
-    show_movies()
-    movie_id = input(PROMPT_FOR_MOVIE_ID)
-    has_available_spots = show_ask_and_return_answer_for_projection_seats(movie_id)
+    tickets = int(input(PROMPT_FOR_TICKETS_CNT))
+    #show_movies()
+    movie_id = int(input(PROMPT_FOR_MOVIE_ID))
+    proj_id = input(PROMPT_FOR_PROJECTION_ID)
+
+    has_available_spots = show_ask_and_return_answer_for_projection_seats(movie_id, tickets, proj_id)
     while not has_available_spots:
-        has_available_spots = show_ask_and_return_answer_for_projection_seats(movie_id)
+        has_available_spots = show_ask_and_return_answer_for_projection_seats(movie_id, tickets,proj_id)
 
 
     available_seats = get_available_seats(proj_id)
     print_free_seats(proj_id, available_seats) 
    
+    seats = []
+    for i in range(tickets):
+        str_for_convert = input(PROMPT_FOR_SEATS)
+        converted = str_for_convert.split(' ')
+        to_be_added = (int(converted[0]), int(converted[len(converted)-1]))
+        print(to_be_added)
+        if to_be_added in available_seats:
+            seats.append(to_be_added)
+
+    while input(PROMPT_FOR_FINALIZE) != "finalize":
+        pass
+
+    on_finalize(seats, proj_id, name)
 
 
+make_reservation()
