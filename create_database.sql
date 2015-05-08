@@ -22,7 +22,7 @@ DROP TABLE IF EXISTS Reservations;
 CREATE TABLE Reservations(
 	reserv_id INTEGER PRIMARY KEY,
 	username TEXT,
-	projection_id INTEGER,
+	proj_id INTEGER,
 	row INTEGER,
 	col INTEGER,
 	FOREIGN KEY(proj_id) REFERENCES Projections(proj_id)
