@@ -1,6 +1,6 @@
 from settings import DB_FILE_NAME
 import sqlite3
-
+from queries import COUNT_FOR_PROJECTION_QUERY, SHOW_ALL_TAKEN_SEATS_QUERY, INSERT_INTO_RESERVATIONS
 
 
 CONN = sqlite3.connect(DB_FILE_NAME)
@@ -17,27 +17,6 @@ PROMPT_FOR_FINALIZE = "Please write down <finalize> to continue: "
 ROWS = 10
 COLS = 10
 SEATS = ROWS * COLS
-
-
-
-COUNT_FOR_PROJECTION_QUERY = '''
-SELECT COUNT(proj_id) AS count
-FROM Reservations
-WHERE proj_id = {}
-'''
-
-SHOW_ALL_TAKEN_SEATS_QUERY = '''
-SELECT row, col 
-FROM Reservations
-WHERE proj_id = {}
-'''
-
-INSERT_INTO_RESERVATIONS = '''
-INSERT INTO Reservations(username, proj_id, row, col)
-VALUES({}, {}, {}, {})
-'''
-
-
 
 def execute_count_projections_query_and_get_result(proj_id):
     cursor = CONN.cursor()
