@@ -6,5 +6,3 @@ cursor = conn.cursor()
 
 with open(DB_INSERT, 'r') as fle:
     cursor.executescript(fle.read())
-
-
